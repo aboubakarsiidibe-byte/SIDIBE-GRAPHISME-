@@ -124,7 +124,7 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
         </div>
 
         {/* Right: Quick Studio Metrics & Actions */}
-        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2 sm:gap-3">
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-3">
           {/* Quick Metrics (hidden on very small screens) */}
           <div className="hidden lg:flex items-center gap-3 px-3 py-1 rounded-xl bg-zinc-900/60 border border-zinc-800/70 text-xs">
             <div className="flex items-center gap-1.5 text-zinc-400">
