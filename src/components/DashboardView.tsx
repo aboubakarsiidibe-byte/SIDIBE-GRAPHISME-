@@ -120,6 +120,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const criticalTasks = sortedPendingTasks.filter((item) => item.urgency.level === 'Critique');
   const todayTasks = sortedPendingTasks.filter((item) => item.urgency.isDueToday);
   const overdueTasks = sortedPendingTasks.filter((item) => item.urgency.isOverdue);
+  const clientValidationTasks = pendingTasks.filter(
+    (task) => task.status === 'En attente de validation client'
+  );
+  const upcomingDeadlineTasks = sortedPendingTasks.filter(
+    (item) => !item.urgency.isOverdue && item.urgency.daysRemaining >= 0 && item.urgency.daysRemaining <= 7
+  );
 
   // Status breakdown count
   const statusCounts: Record<TaskStatus, number> = {
@@ -375,6 +381,80 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
           </div>
         </div>
+      )}
+
+      {/* ACTION CENTER — pilotage opérationnel */}
+      {(visibleWidgets.todayTomorrow || visibleWidgets.clientValidation || visibleWidgets.urgencies) && (
+        <section className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+            <div>
+              <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <Sparkles className="w-4 h-4" style={{ color: primaryColor }} />
+                Centre de pilotage
+              </h3>
+              <p className="text-xs text-zinc-500 mt-0.5">
+                Les prochaines actions qui peuvent débloquer votre production.
+              </p>
+            </div>
+            <button
+              onClick={() => onViewChange('reports')}
+              className="text-xs font-semibold hover:underline cursor-pointer"
+              style={{ color: primaryColor }}
+            >
+              Ouvrir les rapports →
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {visibleWidgets.urgencies && (
+              <button
+                onClick={() => onViewChange('overdue')}
+                className="text-left rounded-xl border border-rose-900/40 bg-rose-950/20 p-4 hover:border-rose-700/60 transition-all cursor-pointer"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-wide text-rose-300">À traiter</span>
+                  <Flame className="w-4 h-4 text-rose-400" />
+                </div>
+                <div className="text-2xl font-black text-white mt-2">{overdueTasks.length}</div>
+                <p className="text-[11px] text-zinc-400 mt-1">
+                  retard(s) nécessitant une action
+                </p>
+              </button>
+            )}
+
+            {visibleWidgets.clientValidation && (
+              <button
+                onClick={() => onViewChange('kanban')}
+                className="text-left rounded-xl border border-violet-900/40 bg-violet-950/20 p-4 hover:border-violet-700/60 transition-all cursor-pointer"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-wide text-violet-300">Validation client</span>
+                  <CheckCircle2 className="w-4 h-4 text-violet-400" />
+                </div>
+                <div className="text-2xl font-black text-white mt-2">{clientValidationTasks.length}</div>
+                <p className="text-[11px] text-zinc-400 mt-1">
+                  livrable(s) en attente de retour
+                </p>
+              </button>
+            )}
+
+            {visibleWidgets.todayTomorrow && (
+              <button
+                onClick={() => onViewChange('week')}
+                className="text-left rounded-xl border border-amber-900/40 bg-amber-950/20 p-4 hover:border-amber-700/60 transition-all cursor-pointer"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-wide text-amber-300">7 prochains jours</span>
+                  <Clock className="w-4 h-4 text-amber-400" />
+                </div>
+                <div className="text-2xl font-black text-white mt-2">{upcomingDeadlineTasks.length}</div>
+                <p className="text-[11px] text-zinc-400 mt-1">
+                  tâche(s) avec échéance proche
+                </p>
+              </button>
+            )}
+          </div>
+        </section>
       )}
 
       {/* Main Grid: Priority Radar & Active Projects */}
