@@ -146,6 +146,15 @@ export interface WorkspaceBackup {
 
 export function importWorkspaceJSON(file: File): Promise<{ projects: Project[]; tasks: Task[] }> {
   return new Promise((resolve, reject) => {
+    if (file.size > 10 * 1024 * 1024) {
+      reject(new Error('La sauvegarde dépasse la limite de 10 Mo.'));
+      return;
+    }
+    if (file.type && file.type !== 'application/json' && !file.name.toLowerCase().endsWith('.json')) {
+      reject(new Error('Le fichier doit être une sauvegarde JSON.'));
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = () => {
       try {
@@ -154,6 +163,9 @@ export function importWorkspaceJSON(file: File): Promise<{ projects: Project[]; 
         const data = parsed as Partial<WorkspaceBackup>;
         if (data.workspace !== 'SIDIBE STUDIO' || !Array.isArray(data.projects) || !Array.isArray(data.tasks)) {
           throw new Error('Cette sauvegarde ne provient pas de SIDIBE STUDIO.');
+        }
+        if (data.version !== 1) {
+          throw new Error('Version de sauvegarde non prise en charge.');
         }
 
         const projects = data.projects.map((item) => {
