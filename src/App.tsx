@@ -360,7 +360,7 @@ export default function App() {
           completedAt: isNowDone ? new Date().toISOString() : undefined,
           clientValidationRequestedDate: isClientWait
             ? t.clientValidationRequestedDate || new Date().toISOString().split('T')[0]
-            : t.clientValidationRequestedDate,
+            : undefined,
         };
       })
     );
