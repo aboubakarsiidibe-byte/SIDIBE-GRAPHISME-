@@ -65,6 +65,7 @@ interface SidebarProps {
   onLockStudio?: () => void;
   onLogout: () => void;
   onExportJSON: () => void;
+  onImportJSON: (file: File) => void;
   onExportCSV: () => void;
   onResetData: () => void;
   isOpenMobile: boolean;
@@ -100,6 +101,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onLockStudio,
   onLogout,
   onExportJSON,
+  onImportJSON,
   onExportCSV,
   onResetData,
   isOpenMobile,
@@ -110,6 +112,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [showWorkspaceMenu, setShowWorkspaceMenu] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
+  const importInputRef = React.useRef<HTMLInputElement>(null);
 
   const primaryColor = activeWorkspace.palette.primary;
 
@@ -648,6 +651,29 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <Download className="w-3.5 h-3.5 text-amber-400 shrink-0" />
               {!isCollapsed && <span className="truncate text-left">Export Sauvegarde (JSON)</span>}
             </button>
+
+            <button
+              onClick={() => importInputRef.current?.click()}
+              title="Restaurer une sauvegarde JSON"
+              className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/60 transition-all cursor-pointer ${
+                isCollapsed ? 'justify-center px-0 py-2' : ''
+              }`}
+            >
+              <RotateCcw className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+              {!isCollapsed && <span className="truncate text-left">Restaurer Sauvegarde (JSON)</span>}
+            </button>
+
+            <input
+              ref={importInputRef}
+              type="file"
+              accept="application/json,.json"
+              className="hidden"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (file) onImportJSON(file);
+                event.target.value = '';
+              }}
+            />
 
             <button
               onClick={onExportCSV}
