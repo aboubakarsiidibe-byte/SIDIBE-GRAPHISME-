@@ -40,6 +40,7 @@ import {
   INITIAL_DEFAULT_WORKSPACE,
 } from './utils/workspaceStorage';
 import { loadCurrentUser, logoutUser, isStudioLocked, setStudioLockedState } from './utils/authStorage';
+import { pushWorkspaceSnapshot } from './utils/cloudSync';
 import { Sidebar } from './components/Sidebar';
 import { TopHeader } from './components/TopHeader';
 import { DashboardView } from './components/DashboardView';
@@ -148,6 +149,18 @@ export default function App() {
   }, [receipts]);
 
   // Workspace Switch & Update
+  const syncActiveWorkspaceToCloud = async (
+    workspace: Workspace,
+    nextProjects = projects,
+    nextTasks = tasks
+  ) => {
+    try {
+      await pushWorkspaceSnapshot(workspace, nextProjects, nextTasks);
+    } catch (error) {
+      console.warn('SIDIBE STUDIO cloud sync:', error);
+    }
+  };
+
   const handleSelectWorkspace = (id: string) => {
     setActiveWorkspaceId(id);
   };
@@ -162,6 +175,11 @@ export default function App() {
     setIsWorkspaceModalOpen(true);
   };
 
+  const handleAuthSuccess = (user: User) => {
+    setCurrentUser(user);
+    void syncActiveWorkspaceToCloud(activeWorkspace);
+  };
+
   const handleSaveWorkspaceModal = (workspaceData: {
     name: string;
     tagline: string;
@@ -174,11 +192,13 @@ export default function App() {
       // Update existing
       const updated = updateWorkspace(workspaceToEdit.id, workspaceData);
       setWorkspaces((prev) => prev.map((w) => (w.id === updated.id ? updated : w)));
+      void syncActiveWorkspaceToCloud(updated);
     } else {
       // Create new
       const created = createWorkspace(currentUser?.id || 'admin', workspaceData);
       setWorkspaces((prev) => [...prev, created]);
       setActiveWorkspaceId(created.id);
+      void syncActiveWorkspaceToCloud(created);
     }
   };
 
@@ -283,6 +303,7 @@ export default function App() {
         createdAt: new Date().toISOString(),
       };
       setProjects((prev) => [newProj, ...prev]);
+      void syncActiveWorkspaceToCloud(activeWorkspace, [newProj, ...projects], tasks);
       setIsNewProjectOpen(false);
     }
   };
@@ -340,6 +361,7 @@ export default function App() {
         createdAt: new Date().toISOString(),
       };
       setTasks((prev) => [newTask, ...prev]);
+      void syncActiveWorkspaceToCloud(activeWorkspace, projects, [newTask, ...tasks]);
       setIsNewTaskOpen(false);
       setNewTaskDefaultDate(undefined);
       setNewTaskDefaultStatus(undefined);
@@ -367,12 +389,14 @@ export default function App() {
         };
       })
     );
+    void syncActiveWorkspaceToCloud(activeWorkspace, projects, tasks);
   };
 
   const handleUpdateTaskDueDate = (taskId: string, newDueDate: string) => {
     setTasks((prev) =>
       prev.map((t) => (t.id === taskId ? { ...t, dueDate: newDueDate } : t))
     );
+    void syncActiveWorkspaceToCloud(activeWorkspace, projects, tasks);
   };
 
   const handleToggleSubtask = (taskId: string, subtaskId: string) => {
@@ -388,6 +412,7 @@ export default function App() {
         };
       })
     );
+    void syncActiveWorkspaceToCloud(activeWorkspace, projects, tasks);
   };
 
   // Quick Task Modal triggers
