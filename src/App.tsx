@@ -19,6 +19,7 @@ import {
   saveTasks,
   resetStudioData,
   exportWorkspaceJSON,
+  importWorkspaceJSON,
   exportTasksCSV,
 } from './utils/storage';
 import {
@@ -420,6 +421,27 @@ export default function App() {
     exportTasksCSV(tasks, projects);
   };
 
+  const handleImportJSON = async (file: File) => {
+    try {
+      const confirmed = window.confirm(
+        'Restaurer cette sauvegarde remplacera les projets et tâches actuels. Continuer ?'
+      );
+      if (!confirmed) return;
+      const restored = await importWorkspaceJSON(file);
+      setProjects(restored.projects);
+      setTasks(restored.tasks);
+      window.alert(
+        `Sauvegarde restaurée : ${restored.projects.length} projet(s) et ${restored.tasks.length} tâche(s).`
+      );
+    } catch (error) {
+      window.alert(
+        error instanceof Error
+          ? `Restauration impossible : ${error.message}`
+          : 'Restauration impossible : fichier invalide.'
+      );
+    }
+  };
+
   // Filter tasks with global search query if present
   const displayTasks = searchQuery.trim()
     ? tasks.filter(
@@ -462,6 +484,7 @@ export default function App() {
         }}
         onLogout={handleLogout}
         onExportJSON={handleExportJSON}
+        onImportJSON={handleImportJSON}
         onExportCSV={handleExportCSV}
         onResetData={handleResetData}
         isOpenMobile={isSidebarMobileOpen}
