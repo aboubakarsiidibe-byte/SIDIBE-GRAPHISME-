@@ -108,7 +108,7 @@ export const TodayView: React.FC<TodayViewProps> = ({
                 {projectsDeliveredToday.map((p) => p.name).join(' • ')}
               </div>
               <div className="text-xs text-zinc-400">
-                Client(s) : {projectsDeliveredToday.map((p) => `${p.client} (${p.budget} €)`).join(', ')}
+                Client(s) : {projectsDeliveredToday.map((p) => `${p.client} (${p.budget.toLocaleString('fr-FR')} XOF)`).join(', ')}
               </div>
             </div>
           </div>
