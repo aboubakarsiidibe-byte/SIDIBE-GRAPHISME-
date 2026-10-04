@@ -76,3 +76,30 @@ button { min-height: 36px; }
   body { user-select: none; }
   input, textarea { user-select: text; }
 }
+
+
+/* SIDIBE STUDIO — mobile app ergonomics V3 */
+@media (max-width: 640px) {
+  header {
+    min-height: 56px;
+    padding-left: max(0.75rem, env(safe-area-inset-left));
+    padding-right: max(0.75rem, env(safe-area-inset-right));
+  }
+
+  main {
+    padding-left: max(0.75rem, env(safe-area-inset-left));
+    padding-right: max(0.75rem, env(safe-area-inset-right));
+  }
+
+  /* Keep dense dashboard cards readable without forcing horizontal scrolling. */
+  main button,
+  main a {
+    touch-action: manipulation;
+  }
+}
+
+@media (display-mode: standalone) {
+  header {
+    padding-top: max(0.625rem, env(safe-area-inset-top));
+  }
+}
