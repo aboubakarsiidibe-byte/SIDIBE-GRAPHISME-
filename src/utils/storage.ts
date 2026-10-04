@@ -36,6 +36,34 @@ export function saveProjects(projects: Project[]): void {
   }
 }
 
+function migrateTask(raw: Partial<Task>): Task {
+  return {
+    id: typeof raw.id === 'string' && raw.id ? raw.id : crypto.randomUUID(),
+    projectId: typeof raw.projectId === 'string' && raw.projectId ? raw.projectId : 'studio-interne',
+    title: typeof raw.title === 'string' && raw.title.trim() ? raw.title : 'Tâche sans titre',
+    description: typeof raw.description === 'string' ? raw.description : '',
+    status: raw.status ?? 'À faire',
+    dueDate: typeof raw.dueDate === 'string' && raw.dueDate ? raw.dueDate : new Date().toISOString().slice(0, 10),
+    startDate: typeof raw.startDate === 'string' ? raw.startDate : undefined,
+    estimatedHours: typeof raw.estimatedHours === 'number' && Number.isFinite(raw.estimatedHours)
+      ? Math.max(0, raw.estimatedHours)
+      : 0,
+    priority: raw.priority ?? 'Moyenne',
+    subtasks: Array.isArray(raw.subtasks)
+      ? raw.subtasks.filter(Boolean).map((subtask) => ({
+          id: typeof subtask.id === 'string' && subtask.id ? subtask.id : crypto.randomUUID(),
+          title: typeof subtask.title === 'string' ? subtask.title : 'Sous-tâche',
+          completed: Boolean(subtask.completed),
+        }))
+      : [],
+    tags: Array.isArray(raw.tags) ? raw.tags.filter((tag): tag is string => typeof tag === 'string') : [],
+    graphicTool: raw.graphicTool,
+    clientValidationRequestedDate: raw.clientValidationRequestedDate,
+    completedAt: raw.completedAt,
+    createdAt: typeof raw.createdAt === 'string' && raw.createdAt ? raw.createdAt : new Date().toISOString(),
+  };
+}
+
 export function loadTasks(): Task[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY_TASKS);
@@ -43,7 +71,15 @@ export function loadTasks(): Task[] {
       saveTasks(INITIAL_TASKS);
       return INITIAL_TASKS;
     }
-    return JSON.parse(raw);
+
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) {
+      throw new Error('Invalid task storage format');
+    }
+
+    const migrated = parsed.map((task) => migrateTask(task as Partial<Task>));
+    saveTasks(migrated);
+    return migrated;
   } catch (e) {
     console.error('Error loading tasks from localStorage', e);
     return INITIAL_TASKS;
