@@ -2,8 +2,8 @@
 create extension if not exists pgcrypto;
 
 create table if not exists public.studio_workspaces (
-  id uuid primary key default gen_random_uuid(),
-  owner_id uuid not null,
+  id text primary key,
+  owner_id text not null,
   name text not null,
   domain text,
   created_at timestamptz not null default now(),
@@ -12,7 +12,7 @@ create table if not exists public.studio_workspaces (
 
 create table if not exists public.studio_projects (
   id text primary key,
-  workspace_id uuid not null references public.studio_workspaces(id) on delete cascade,
+  workspace_id text not null references public.studio_workspaces(id) on delete cascade,
   name text not null,
   client text not null,
   type text not null,
