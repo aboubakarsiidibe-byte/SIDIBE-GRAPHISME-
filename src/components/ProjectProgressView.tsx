@@ -18,6 +18,9 @@ import {
   Sparkles,
   ChevronDown,
   ChevronUp,
+  Activity,
+  AlertTriangle,
+  CheckCircle2,
 } from 'lucide-react';
 
 interface ProjectProgressViewProps {
@@ -99,6 +102,19 @@ export const ProjectProgressView: React.FC<ProjectProgressViewProps> = ({
           const daysToDeadline = getDaysDifference(project.deadline, todayStr);
           const isOverdue = daysToDeadline < 0;
           const isExpanded = expandedProjectId === project.id;
+          const overdueTasks = projectTasks.filter((t) => t.status !== 'Terminé' && t.dueDate < todayStr).length;
+          const validationTasks = projectTasks.filter((t) => t.status === 'En attente de validation client').length;
+          const completedRatio = progress.totalTasks > 0 ? progress.completedTasks / progress.totalTasks : 0;
+          const deadlineRisk = isOverdue ? 2 : daysToDeadline <= 2 ? 1 : 0;
+          const healthScore = Math.max(0, Math.round(completedRatio * 100 - overdueTasks * 20 - validationTasks * 8 - deadlineRisk * 15));
+          const health = healthScore >= 75 ? 'Excellent' : healthScore >= 50 ? 'Attention' : healthScore >= 25 ? 'Risque' : 'Bloqué';
+          const healthClass = health === 'Excellent'
+            ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+            : health === 'Attention'
+              ? 'bg-amber-500/15 text-amber-300 border-amber-500/30'
+              : health === 'Risque'
+                ? 'bg-orange-500/15 text-orange-300 border-orange-500/30'
+                : 'bg-rose-500/15 text-rose-300 border-rose-500/30';
 
           return (
             <div
@@ -140,6 +156,15 @@ export const ProjectProgressView: React.FC<ProjectProgressViewProps> = ({
                   >
                     {project.name}
                   </h3>
+
+                  <div className="flex items-center gap-2 flex-wrap mt-2">
+                    <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-lg border text-[10px] font-bold ${healthClass}`}>
+                      {health === 'Excellent' ? <CheckCircle2 className="w-3 h-3" /> : health === 'Bloqué' ? <AlertTriangle className="w-3 h-3" /> : <Activity className="w-3 h-3" />}
+                      Santé : {health} · {healthScore}/100
+                    </span>
+                    {overdueTasks > 0 && <span className="text-[10px] text-rose-300">{overdueTasks} retard{overdueTasks > 1 ? 's' : ''}</span>}
+                    {validationTasks > 0 && <span className="text-[10px] text-amber-300">{validationTasks} validation{validationTasks > 1 ? 's' : ''} client</span>}
+                  </div>
 
                   <div className="flex items-center gap-4 text-xs text-zinc-400 flex-wrap">
                     <span className="flex items-center gap-1.5">
