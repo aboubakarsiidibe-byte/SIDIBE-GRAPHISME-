@@ -41,6 +41,7 @@ import {
 } from './utils/workspaceStorage';
 import { loadCurrentUser, logoutUser, isStudioLocked, setStudioLockedState } from './utils/authStorage';
 import { pushWorkspaceSnapshot } from './utils/cloudSync';
+import { signOutFromSupabase } from './utils/supabaseAuth';
 import { Sidebar } from './components/Sidebar';
 import { TopHeader } from './components/TopHeader';
 import { DashboardView } from './components/DashboardView';
@@ -205,11 +206,13 @@ export default function App() {
   const handleSavePalette = (palette: WorkspacePalette) => {
     const updated = updateWorkspace(activeWorkspace.id, { palette });
     setWorkspaces((prev) => prev.map((w) => (w.id === updated.id ? updated : w)));
+    void syncActiveWorkspaceToCloud(updated);
   };
 
   const handleSaveShortcuts = (appShortcuts: AppShortcut[]) => {
     const updated = updateWorkspace(activeWorkspace.id, { appShortcuts });
     setWorkspaces((prev) => prev.map((w) => (w.id === updated.id ? updated : w)));
+    void syncActiveWorkspaceToCloud(updated);
   };
 
   // Auth Handlers
@@ -218,12 +221,9 @@ export default function App() {
     setIsAuthModalOpen(true);
   };
 
-  const handleAuthSuccess = (user: User) => {
-    setCurrentUser(user);
-  };
-
   const handleLogout = () => {
     logoutUser();
+    void signOutFromSupabase();
     setCurrentUser(null);
   };
 
