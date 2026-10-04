@@ -62,3 +62,17 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
     scroll-behavior: auto !important;
   }
 }
+
+/* SIDIBE STUDIO — application shell V2 */
+html, body, #root { min-height: 100%; }
+body { overscroll-behavior-y: none; }
+button { min-height: 36px; }
+@media (max-width: 768px) {
+  header { padding-top: max(0.625rem, env(safe-area-inset-top)); }
+  main { padding-bottom: max(1.25rem, env(safe-area-inset-bottom)); }
+  ::-webkit-scrollbar { width: 3px; height: 3px; }
+}
+@media (display-mode: standalone) {
+  body { user-select: none; }
+  input, textarea { user-select: text; }
+}
