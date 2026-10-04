@@ -134,6 +134,62 @@ export function exportWorkspaceJSON(projects: Project[], tasks: Task[]): void {
   URL.revokeObjectURL(url);
 }
 
+
+export interface WorkspaceBackup {
+  workspace: 'SIDIBE STUDIO';
+  version: 1;
+  exportedAt: string;
+  projects: Project[];
+  tasks: Task[];
+}
+
+export function importWorkspaceJSON(file: File): Promise<{ projects: Project[]; tasks: Task[] }> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const parsed: unknown = JSON.parse(String(reader.result));
+        if (!parsed || typeof parsed !== 'object') throw new Error('Format de sauvegarde invalide.');
+        const data = parsed as Partial<WorkspaceBackup>;
+        if (data.workspace !== 'SIDIBE STUDIO' || !Array.isArray(data.projects) || !Array.isArray(data.tasks)) {
+          throw new Error('Cette sauvegarde ne provient pas de SIDIBE STUDIO.');
+        }
+
+        const projects = data.projects.map((item) => {
+          const p = item as Partial<Project>;
+          return {
+            id: typeof p.id === 'string' && p.id ? p.id : crypto.randomUUID(),
+            name: typeof p.name === 'string' && p.name.trim() ? p.name : 'Projet sans titre',
+            client: typeof p.client === 'string' && p.client.trim() ? p.client : 'Client',
+            clientEmail: typeof p.clientEmail === 'string' ? p.clientEmail : undefined,
+            clientPhone: typeof p.clientPhone === 'string' ? p.clientPhone : undefined,
+            type: p.type ?? 'Autre',
+            budget: typeof p.budget === 'number' && Number.isFinite(p.budget) ? Math.max(0, p.budget) : 0,
+            currency: 'XOF',
+            paymentStatus: p.paymentStatus ?? 'Non facturé',
+            startDate: typeof p.startDate === 'string' && p.startDate ? p.startDate : new Date().toISOString().slice(0, 10),
+            deadline: typeof p.deadline === 'string' && p.deadline ? p.deadline : new Date().toISOString().slice(0, 10),
+            links: Array.isArray(p.links) ? p.links.filter(Boolean) as Project['links'] : [],
+            notesBrief: typeof p.notesBrief === 'string' ? p.notesBrief : '',
+            colorTag: typeof p.colorTag === 'string' && p.colorTag ? p.colorTag : '#f59e0b',
+            createdAt: typeof p.createdAt === 'string' && p.createdAt ? p.createdAt : new Date().toISOString(),
+            archived: Boolean(p.archived),
+          } as Project;
+        });
+
+        const tasks = data.tasks.map((item) => migrateTask(item as Partial<Task>));
+        saveProjects(projects);
+        saveTasks(tasks);
+        resolve({ projects, tasks });
+      } catch (error) {
+        reject(error instanceof Error ? error : new Error('Impossible de lire la sauvegarde.'));
+      }
+    };
+    reader.onerror = () => reject(new Error('Impossible de lire le fichier de sauvegarde.'));
+    reader.readAsText(file);
+  });
+}
+
 export function exportTasksCSV(tasks: Task[], projects: Project[]): void {
   const headers = ['ID', 'Titre', 'Projet', 'Statut', 'Priorité', 'Échéance', 'Heures estimées', 'Sous-tâches'];
   const projectMap = new Map(projects.map((p) => [p.id, p.name]));
