@@ -90,7 +90,7 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
     <header className="border-b border-zinc-800/80 bg-zinc-950/80 backdrop-blur-md sticky top-0 z-20 px-4 lg:px-8 py-2.5">
       <div className="flex items-center justify-between gap-3">
         {/* Left: Mobile hamburger & breadcrumbs / view title */}
-        <div className="flex items-center gap-3">
+        <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
           <button
             onClick={onOpenMobileSidebar}
             className="md:hidden p-2 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white hover:border-zinc-700 transition-colors cursor-pointer"
@@ -99,7 +99,7 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
             <Menu className="w-5 h-5" />
           </button>
 
-          <div className="flex items-center gap-2">
+          <div className="flex min-w-0 items-center gap-2">
             <div
               className="p-1.5 rounded-lg shrink-0"
               style={{
@@ -110,13 +110,13 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
               <ViewIcon className="w-4 h-4" />
             </div>
 
-            <div>
-              <div className="flex items-center gap-1.5 text-[11px] text-zinc-500 font-medium">
-                <span>{activeWorkspace.name}</span>
+            <div className="min-w-0">
+              <div className="flex min-w-0 items-center gap-1.5 text-[11px] text-zinc-500 font-medium">
+                <span className="max-w-[22vw] truncate sm:max-w-none">{activeWorkspace.name}</span>
                 <span>/</span>
                 <span className="text-zinc-400">Options</span>
               </div>
-              <h1 className="text-sm md:text-base font-bold text-white tracking-tight leading-none">
+              <h1 className="max-w-[42vw] truncate text-sm md:text-base font-bold text-white tracking-tight leading-none">
                 {currentViewInfo.label}
               </h1>
             </div>
@@ -124,7 +124,7 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
         </div>
 
         {/* Right: Quick Studio Metrics & Actions */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2 sm:gap-3">
           {/* Quick Metrics (hidden on very small screens) */}
           <div className="hidden lg:flex items-center gap-3 px-3 py-1 rounded-xl bg-zinc-900/60 border border-zinc-800/70 text-xs">
             <div className="flex items-center gap-1.5 text-zinc-400">
@@ -161,7 +161,7 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
           </div>
 
           {/* Quick Actions */}
-          <div className="flex items-center gap-1.5">
+          <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
             {onOpenLogoModal && (
               <button
                 onClick={onOpenLogoModal}
