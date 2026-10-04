@@ -11,16 +11,32 @@ export function loadProjects(): Project[] {
       saveProjects(INITIAL_PROJECTS);
       return INITIAL_PROJECTS;
     }
-    const parsed: Project[] = JSON.parse(raw);
-    // Sanitize: force XOF and if currency was € or legacy non-XOF, ensure budget is 0
-    const migrated = parsed.map((p) => {
-      const hadEuro = p.currency === '€' || !p.currency || p.currency === 'EUR';
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) throw new Error('Invalid project storage format');
+
+    const migrated: Project[] = parsed.map((rawProject) => {
+      const p = rawProject as Partial<Project>;
+      const budget = typeof p.budget === 'number' && Number.isFinite(p.budget) ? Math.max(0, p.budget) : 0;
       return {
-        ...p,
+        id: typeof p.id === 'string' && p.id ? p.id : crypto.randomUUID(),
+        name: typeof p.name === 'string' && p.name.trim() ? p.name : 'Projet sans titre',
+        client: typeof p.client === 'string' && p.client.trim() ? p.client : 'Client',
+        clientEmail: typeof p.clientEmail === 'string' ? p.clientEmail : undefined,
+        clientPhone: typeof p.clientPhone === 'string' ? p.clientPhone : undefined,
+        type: p.type ?? 'Autre',
+        budget,
         currency: 'XOF',
-        budget: hadEuro ? 0 : (typeof p.budget === 'number' ? p.budget : 0),
+        paymentStatus: p.paymentStatus ?? 'Non facturé',
+        startDate: typeof p.startDate === 'string' && p.startDate ? p.startDate : new Date().toISOString().slice(0, 10),
+        deadline: typeof p.deadline === 'string' && p.deadline ? p.deadline : new Date().toISOString().slice(0, 10),
+        links: Array.isArray(p.links) ? p.links.filter(Boolean) as Project['links'] : [],
+        notesBrief: typeof p.notesBrief === 'string' ? p.notesBrief : '',
+        colorTag: typeof p.colorTag === 'string' && p.colorTag ? p.colorTag : '#f59e0b',
+        createdAt: typeof p.createdAt === 'string' && p.createdAt ? p.createdAt : new Date().toISOString(),
+        archived: Boolean(p.archived),
       };
     });
+    saveProjects(migrated);
     return migrated;
   } catch (e) {
     console.error('Error loading projects from localStorage', e);
