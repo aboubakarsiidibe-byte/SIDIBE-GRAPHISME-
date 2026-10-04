@@ -1,4 +1,6 @@
 -- SIDIBE STUDIO V2 — Supabase foundation
+-- Canonical schema: IDs match the local SIDIBE STUDIO app (text).
+
 create extension if not exists pgcrypto;
 
 create table if not exists public.studio_workspaces (
@@ -29,7 +31,7 @@ create table if not exists public.studio_projects (
 
 create table if not exists public.studio_tasks (
   id text primary key,
-  workspace_id uuid not null references public.studio_workspaces(id) on delete cascade,
+  workspace_id text not null references public.studio_workspaces(id) on delete cascade,
   project_id text references public.studio_projects(id) on delete cascade,
   title text not null,
   description text not null default '',
@@ -55,4 +57,47 @@ alter table public.studio_workspaces enable row level security;
 alter table public.studio_projects enable row level security;
 alter table public.studio_tasks enable row level security;
 
--- Policies must be added after connecting Supabase Auth and mapping workspace membership.
+-- RLS is owner-based until workspace membership is introduced.
+do $$
+begin
+  if not exists (select 1 from pg_policies where schemaname='public' and tablename='studio_workspaces' and policyname='workspace_owner_select') then
+    create policy workspace_owner_select on public.studio_workspaces for select using (owner_id = (select auth.uid()::text));
+  end if;
+  if not exists (select 1 from pg_policies where schemaname='public' and tablename='studio_workspaces' and policyname='workspace_owner_insert') then
+    create policy workspace_owner_insert on public.studio_workspaces for insert with check (owner_id = (select auth.uid()::text));
+  end if;
+  if not exists (select 1 from pg_policies where schemaname='public' and tablename='studio_workspaces' and policyname='workspace_owner_update') then
+    create policy workspace_owner_update on public.studio_workspaces for update using (owner_id = (select auth.uid()::text)) with check (owner_id = (select auth.uid()::text));
+  end if;
+  if not exists (select 1 from pg_policies where schemaname='public' and tablename='studio_workspaces' and policyname='workspace_owner_delete') then
+    create policy workspace_owner_delete on public.studio_workspaces for delete using (owner_id = (select auth.uid()::text));
+  end if;
+
+  if not exists (select 1 from pg_policies where schemaname='public' and tablename='studio_projects' and policyname='project_workspace_owner_select') then
+    create policy project_workspace_owner_select on public.studio_projects for select using (exists (select 1 from public.studio_workspaces w where w.id = workspace_id and w.owner_id = (select auth.uid()::text)));
+  end if;
+  if not exists (select 1 from pg_policies where schemaname='public' and tablename='studio_projects' and policyname='project_workspace_owner_insert') then
+    create policy project_workspace_owner_insert on public.studio_projects for insert with check (exists (select 1 from public.studio_workspaces w where w.id = workspace_id and w.owner_id = (select auth.uid()::text)));
+  end if;
+  if not exists (select 1 from pg_policies where schemaname='public' and tablename='studio_projects' and policyname='project_workspace_owner_update') then
+    create policy project_workspace_owner_update on public.studio_projects for update using (exists (select 1 from public.studio_workspaces w where w.id = workspace_id and w.owner_id = (select auth.uid()::text))) with check (exists (select 1 from public.studio_workspaces w where w.id = workspace_id and w.owner_id = (select auth.uid()::text)));
+  end if;
+  if not exists (select 1 from pg_policies where schemaname='public' and tablename='studio_projects' and policyname='project_workspace_owner_delete') then
+    create policy project_workspace_owner_delete on public.studio_projects for delete using (exists (select 1 from public.studio_workspaces w where w.id = workspace_id and w.owner_id = (select auth.uid()::text)));
+  end if;
+
+  if not exists (select 1 from pg_policies where schemaname='public' and tablename='studio_tasks' and policyname='task_workspace_owner_select') then
+    create policy task_workspace_owner_select on public.studio_tasks for select using (exists (select 1 from public.studio_workspaces w where w.id = workspace_id and w.owner_id = (select auth.uid()::text)));
+  end if;
+  if not exists (select 1 from pg_policies where schemaname='public' and tablename='studio_tasks' and policyname='task_workspace_owner_insert') then
+    create policy task_workspace_owner_insert on public.studio_tasks for insert with check (exists (select 1 from public.studio_workspaces w where w.id = workspace_id and w.owner_id = (select auth.uid()::text)));
+  end if;
+  if not exists (select 1 from pg_policies where schemaname='public' and tablename='studio_tasks' and policyname='task_workspace_owner_update') then
+    create policy task_workspace_owner_update on public.studio_tasks for update using (exists (select 1 from public.studio_workspaces w where w.id = workspace_id and w.owner_id = (select auth.uid()::text))) with check (exists (select 1 from public.studio_workspaces w where w.id = workspace_id and w.owner_id = (select auth.uid()::text)));
+  end if;
+  if not exists (select 1 from pg_policies where schemaname='public' and tablename='studio_tasks' and policyname='task_workspace_owner_delete') then
+    create policy task_workspace_owner_delete on public.studio_tasks for delete using (exists (select 1 from public.studio_workspaces w where w.id = workspace_id and w.owner_id = (select auth.uid()::text)));
+  end if;
+end $$;
+
+drop table if exists public.test_sidibe;
