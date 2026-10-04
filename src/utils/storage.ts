@@ -121,6 +121,7 @@ export function resetStudioData(): { projects: Project[]; tasks: Task[] } {
 export function exportWorkspaceJSON(projects: Project[], tasks: Task[]): void {
   const exportData = {
     workspace: 'SIDIBE STUDIO',
+    version: 1,
     exportedAt: new Date().toISOString(),
     projects,
     tasks,
