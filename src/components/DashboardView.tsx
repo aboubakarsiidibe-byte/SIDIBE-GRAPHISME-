@@ -103,7 +103,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
   // Metrics
   const activeProjects = projects.filter((p) => !p.archived);
-  const totalBudget = projects.reduce((acc, p) => acc + (p.budget || 0), 0);
+  const totalBudget = activeProjects.reduce((acc, p) => acc + (p.budget || 0), 0);
+  const visibleProjects = activeProjects.slice(0, 4);
   const completedTasks = tasks.filter((t) => t.status === 'Terminé');
   const pendingTasks = tasks.filter((t) => t.status !== 'Terminé');
 
@@ -401,7 +402,23 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
 
             <div className="space-y-2.5">
-              {sortedPendingTasks.slice(0, 5).map(({ task, project, urgency }) => {
+              {sortedPendingTasks.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-zinc-700 bg-zinc-950/40 p-6 text-center">
+                  <CheckCircle2 className="w-8 h-8 mx-auto text-emerald-400 mb-2" />
+                  <p className="text-sm font-semibold text-zinc-200">Aucune tâche prioritaire</p>
+                  <p className="text-xs text-zinc-500 mt-1">
+                    Votre file de travail est à jour. Ajoutez une tâche quand un nouveau livrable arrive.
+                  </p>
+                  <button
+                    onClick={onOpenNewTask}
+                    className="mt-3 inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold text-zinc-950 cursor-pointer"
+                    style={{ backgroundColor: primaryColor }}
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    Nouvelle tâche
+                  </button>
+                </div>
+              ) : sortedPendingTasks.slice(0, 5).map(({ task, project, urgency }) => {
                 return (
                   <div
                     key={task.id}
@@ -499,7 +516,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   </div>
                 );
               })}
-            </div>
+              </div>
 
             <div className="mt-4 pt-3 border-t border-zinc-800/80 flex items-center justify-between text-xs text-zinc-400">
               <span>{pendingTasks.length} tâches en cours dans votre espace</span>
@@ -534,7 +551,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               </div>
 
               <div className="space-y-4">
-                {projects.slice(0, 4).map((project) => {
+                {visibleProjects.length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-zinc-700 bg-zinc-950/40 p-5 text-center">
+                    <FolderOpen className="w-7 h-7 mx-auto text-zinc-500 mb-2" />
+                    <p className="text-xs font-semibold text-zinc-300">Aucun projet actif</p>
+                    <p className="text-[11px] text-zinc-500 mt-1">
+                      Créez votre premier projet pour suivre son avancement ici.
+                    </p>
+                  </div>
+                ) : visibleProjects.map((project) => {
                   const projectTasks = tasks.filter((t) => t.projectId === project.id);
                   const progress = calculateProjectProgress(projectTasks);
                   return (
