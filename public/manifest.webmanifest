@@ -1,0 +1,15 @@
+{
+  "name": "SIDIBE STUDIO",
+  "short_name": "SIDIBE",
+  "description": "Application de pilotage pour studio graphique : projets, tâches, outils, facturation et espaces de travail.",
+  "lang": "fr-FR",
+  "dir": "ltr",
+  "display": "standalone",
+  "orientation": "any",
+  "start_url": "/",
+  "scope": "/",
+  "background_color": "#09090b",
+  "theme_color": "#09090b",
+  "categories": ["business", "productivity", "design"],
+  "icons": []
+}
